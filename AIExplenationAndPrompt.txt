@@ -1,0 +1,1012 @@
+Link:
+https://chatgpt.com/share/6a947436-ca28-83ed-880f-ce00b734293a
+-----------------------------------------
+Prompt:
+ik wil een video game maken, waar dat de spelers zelf de vreiheid krijgen om (mini)games in te maken die publiek verkreigbaar worden en eigen servers daarvoor kunnen opstarten of lokaal zelf kunnen spelen, hierbij is het de bedoeling dat ik geen echte game maak, maar waar dat alle bouwblokken zijn om bijvoorbeeld een survival-game, 2d platformer, etc kan maken en dat er geen echte programmeer skills nodig zijn voor de eindgebruikers, ik zou dit graag volledig open-source maken, ik heb een basis-kennis C#/dotnet, Java, met welke software zou dit het makkelijkst te realiseren zijn en bestaat er al een soortgeleike software/game?
+
+-----------------------------------------
+Response/explenation:
+Ja. Wat je beschrijft is eigenlijk **geen klassieke game**, maar een **open-source game-creation platform / UGC engine**: een soort combinatie van Roblox Studio, Core, LittleBigPlanet/Fortnite Creative en een modding-platform — maar dan waarbij de gebruiker eigenaar is van de games en zelfs zijn eigen server kan draaien.
+
+En juist dat laatste maakt jouw idee interessant.
+
+## Kort antwoord
+
+Voor jouw achtergrond zou ik **Godot + C#/.NET** als basis kiezen.
+
+![Image](https://images.openai.com/static-rsc-4/ng0zp-OKkQGYnzc3_toB8DjW5vTbp8_-rA7ZWqBxKkBSS24VaAZilGoX-hpgRcdPS0Ga2OI1AJRp3VvO6BKQd7lruMV7UC1MZVyOBXmcn5ridYDJgYnRr2jrC-4lvqQipZnAhUqHa7cM4zhQsBfSullSjyqbftEkBS6R_syAAIH9QbFE-MwgvfgnlrQuEPw7?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/piC89QZQqRY183cpBsSh-Nq1zuGxgdcKS9fmz9XPeb0M0yHMeiopiqitEOruIahxMKJ8VSPbtdZdbYfbea358SWMzA2uVHMJVO4u35VrHHNO5r4Sx40iqkk2LhIXkUpV1uV7mC0flMVrE5Ss-YEAa3ae4Ea61zkxP57gV7fl3GyJIG0DpFqxS1Mrr82Ez37O?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/RIrgzA_okmhzLKj7JvdciIsJdLVvx_h7oZA0qhcKy3LZxMfg9zgrxO9Vcw2L63W2bmz8sl0_WVSmH9k6RSt0-m78ZWLlngN-IZCCKLpHhk4tbEXlCe5H0UsBnpFS9CQdHi74vhtKETKCipMyV8hkkFcxD-yieQF7fZ-PVjfoWqS8P3Qn3zdB5otT7Ymm9cRg?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/MYVEbaLMUvuvAZo9fePGbFbBaRsoAIF3WUBewWg88iWqvg7bmnNhiilHtUmSv3oFLF6x1Kr8cEzqhQDIEQrq3KEqOVf_9-DnCy7-hpSuwD621Hab-156LdzLrD57ibgnvCv1qowf6k_C13Dy1VyYtWhw4M06DQuN9y_KO8R7QD3QmcIsaBlKiTupVykF0lTw?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/4ntjGvvHXkmPcUIg_O2_U02MpKjqIG1ssYfXMcyb9NXZaDpGByfRsj4aebg_WF4ijN0MQoMUVYGcgsQry7oqOtzUP6zXiBACWgfPOVBjISa5o3U3QlVnHptBz90qiHI8FGIl6kNLuRN6RDaNeEjNpN85skSekvJLLHpZ-Yxsyx858q5clsi71qTkPYAOKheq?purpose=fullsize)
+
+Mijn voorgestelde stack:
+
+| Onderdeel              | Technologie                              |
+| ---------------------- | ---------------------------------------- |
+| Game engine            | **Godot 4.x**                            |
+| Programmeertaal intern | **C# / .NET**                            |
+| User scripting         | **geen code → visual scripting / nodes** |
+| Game definition        | JSON/resources/custom format             |
+| Multiplayer            | Godot multiplayer                        |
+| Dedicated servers      | Godot headless/server build              |
+| Backend/API            | ASP.NET Core                             |
+| Database               | PostgreSQL                               |
+| Content repository     | Git + eventueel eigen package registry   |
+| Launcher               | C#/.NET                                  |
+| 3D assets              | glTF                                     |
+| 2D assets              | PNG/SVG                                  |
+| Open source            | **MIT of Apache-2.0**                    |
+
+Godot heeft ingebouwde high-level multiplayer en ondersteunt dedicated servers, inclusief headless server builds. ([Godot Engine documentation][1])
+
+Maar er is één **heel belangrijk ontwerpbesluit**:
+
+> **Laat eindgebruikers niet rechtstreeks C# programmeren.**
+
+Maak in plaats daarvan een **node/component-systeem** waarmee iemand bijvoorbeeld:
+
+```text
+Player enters area
+       ↓
+    IF health < 20
+       ↓
+   Give Shield
+       ↓
+   Play Sound
+```
+
+kan bouwen door blokken aan elkaar te klikken.
+
+---
+
+# Wat jij eigenlijk probeert te bouwen
+
+Ik zou het concept ongeveer zo definiëren:
+
+> **Een open-source platform waarin gebruikers zelf games kunnen creëren, publiceren, spelen en hosten zonder programmeerkennis.**
+
+De gebruiker installeert jouw programma en krijgt bijvoorbeeld:
+
+```text
+┌──────────────────────────────────────┐
+│             MY GAME PLATFORM         │
+├───────────────┬──────────────────────┤
+│ CREATE        │                      │
+│               │     3D VIEW          │
+│ Components    │                      │
+│ Entities      │                      │
+│ Terrain       │                      │
+│ Items         │                      │
+│ Characters    │                      │
+│ Logic         │                      │
+│ UI            │                      │
+│ Multiplayer   │                      │
+│               │                      │
+├───────────────┴──────────────────────┤
+│ Properties │ Events │ Logic │ Assets │
+└──────────────────────────────────────┘
+```
+
+En vervolgens:
+
+### Game maken
+
+Een gebruiker kan bijvoorbeeld:
+
+**Survival game**
+
+```text
+World
+ ├── Terrain
+ ├── Trees
+ ├── Rocks
+ ├── Animals
+ ├── Player
+ │    ├── Health
+ │    ├── Hunger
+ │    └── Inventory
+ ├── Day/Night cycle
+ └── Crafting
+```
+
+Of:
+
+**2D platformer**
+
+```text
+Game
+ ├── Player
+ ├── Platforms
+ ├── Enemies
+ ├── Coins
+ ├── Checkpoints
+ └── Level End
+```
+
+Of:
+
+**Tower defense**
+
+```text
+Game
+ ├── Path
+ ├── EnemySpawner
+ ├── Towers
+ ├── Waves
+ ├── Currency
+ └── Base
+```
+
+En al die onderdelen zijn gewoon **bouwblokken**.
+
+---
+
+# Bestaat dit al?
+
+**Ja, maar niet precies zoals jij het beschrijft.**
+
+Er zijn een paar zeer interessante voorbeelden.
+
+## 1. Roblox
+
+Waarschijnlijk de grootste vergelijking.
+
+Roblox Corporation heeft Roblox Studio, waarmee gebruikers games kunnen bouwen, testen en publiceren. Studio bevat onder andere templates, een 3D editor, physics, multiplayer en scripting. ([Creator Hub][2])
+
+Het grote verschil:
+
+**Roblox**
+
+```text
+Creator
+   ↓
+Roblox Studio
+   ↓
+Roblox platform
+   ↓
+Roblox servers
+   ↓
+Players
+```
+
+Jij wilt eerder:
+
+```text
+Creator
+   ↓
+YOUR ENGINE
+   ↓
+GAME FILE
+   ├── Local
+   ├── LAN
+   └── Dedicated server
+          ↓
+        Players
+```
+
+Dat is een fundamenteel verschil.
+
+Je gebruikers zouden dus bijvoorbeeld kunnen zeggen:
+
+> "Ik heb mijn survival game gemaakt. Ik wil hem op mijn eigen Linux VPS hosten."
+
+En dan:
+
+```bash
+myplatform-server ./MySurvivalGame
+```
+
+Klaar.
+
+---
+
+# 2. Core
+
+Manticore Games heeft **Core**, en dit komt misschien nóg dichter bij jouw idee.
+
+Core is expliciet gericht op gebruikers die multiplayer-games willen maken zonder vanaf nul een game-engine te bouwen. Het bevat bijvoorbeeld templates voor survival, dungeon crawler, battle royale, racing enzovoort. ([Core Games][3])
+
+Het ondersteunt ook een community van door gebruikers gemaakte games. ([Manticore Games Support][4])
+
+Maar:
+
+> Core is een gesloten commercieel platform.
+
+De servers/infrastructuur zijn onderdeel van Core. ([docs.coregames.com][5])
+
+Dat is precies waar jouw project zich zou kunnen onderscheiden.
+
+---
+
+# 3. Luanti
+
+Deze is **heel belangrijk om te bekijken**.
+
+Luanti (vroeger Minetest) is een open-source voxel game creation platform. Je kunt verschillende games spelen, games/mods maken en lokaal of online multiplayer spelen. ([luanti.org][6])
+
+Het heeft bovendien een interessant concept:
+
+```text
+Luanti
+   │
+   ├── Game A
+   ├── Game B
+   ├── Game C
+   └── Game D
+```
+
+En servers kunnen de benodigde content automatisch aan clients leveren. ([wiki.minetest.org][7])
+
+**Dit is architecturaal erg relevant voor jouw idee.**
+
+Maar Luanti is primair een **voxel-engine**.
+
+Jij wilt iets veel algemeners:
+
+```text
+2D platformer
+       +
+3D survival
+       +
+racing
+       +
+RPG
+       +
+tower defense
+       +
+board game
+       +
+???
+```
+
+Dat maakt jouw probleem aanzienlijk moeilijker.
+
+---
+
+# Waarom Godot interessant is
+
+Godot Engine zou ik voor jou serieus overwegen.
+
+Niet omdat Godot kant-en-klaar jouw idee kan uitvoeren.
+
+Maar omdat Godot al een enorme hoeveelheid fundamentele problemen voor je oplost:
+
+* rendering
+* physics
+* audio
+* input
+* scenes
+* animation
+* UI
+* 2D
+* 3D
+* networking
+* resource management
+* export
+* scripting
+* dedicated servers
+
+En Godot heeft bovendien al ondersteuning voor dedicated server exports. ([Godot Engine documentation][1])
+
+Je hoeft dus niet zelf een engine te schrijven.
+
+---
+
+# Ik zou C# gebruiken voor de engine, maar NIET voor de creators
+
+Dat is volgens mij de belangrijkste beslissing.
+
+Jij kent C#/.NET.
+
+Dus intern:
+
+```text
+Your Platform
+      │
+      ▼
+   Godot Engine
+      │
+      ▼
+ C#/.NET systems
+      │
+ ┌────┴─────────────┐
+ │                  │
+Game Runtime     Editor
+```
+
+Maar de gebruiker ziet:
+
+```text
+       ┌───────────────┐
+       │   PLAYER      │
+       └───────┬───────┘
+               │
+          On Health < 20
+               │
+               ▼
+       ┌───────────────┐
+       │ Give Shield   │
+       └───────┬───────┘
+               │
+               ▼
+       ┌───────────────┐
+       │ Play Effect   │
+       └───────────────┘
+```
+
+Geen C#.
+
+---
+
+# Eigenlijk wil je een "visual programming language" maken
+
+Dit wordt het hart van je project.
+
+Bijvoorbeeld:
+
+### Events
+
+```text
+Player Joined
+Player Died
+Player Entered Area
+Item Collected
+Timer Finished
+Enemy Spawned
+Round Started
+Round Ended
+```
+
+### Conditions
+
+```text
+Health < X
+Distance < X
+Has Item
+Is Team
+Random Chance
+Time Of Day
+Player Count
+```
+
+### Actions
+
+```text
+Give Item
+Remove Item
+Spawn Entity
+Destroy Entity
+Teleport
+Deal Damage
+Heal
+Play Sound
+Show UI
+Start Timer
+Change Weather
+Start Round
+```
+
+En dan kan iemand bijvoorbeeld:
+
+```text
+Player enters area
+        │
+        ▼
+   Is night?
+      /   \
+    YES    NO
+     │      │
+     ▼      ▼
+Spawn     Nothing
+Zombie
+```
+
+Dat is eigenlijk een **programmeertaal**, maar dan visueel.
+
+---
+
+# Nog interessanter: Components
+
+Ik zou niet alles als "game object" ontwerpen.
+
+Gebruik een **Entity + Component** architectuur.
+
+Bijvoorbeeld:
+
+```text
+Zombie
+│
+├── Transform
+├── Sprite
+├── Collider
+├── Health
+├── Movement
+├── AI
+└── Loot
+```
+
+Een gebruiker kan dan een object selecteren en zeggen:
+
+```text
++ Add Component
+
+[ Health       ]
+[ Inventory    ]
+[ Damage       ]
+[ Enemy AI     ]
+[ Collectible  ]
+[ Weapon       ]
+[ Vehicle      ]
+[ Respawn      ]
+[ Destructible ]
+```
+
+Daardoor hoef je niet voor iedere nieuwe game een compleet systeem te maken.
+
+---
+
+# En dan komt het echt interessante gedeelte
+
+Je kunt **game templates** maken.
+
+Bijvoorbeeld:
+
+```text
+NEW GAME
+
+Choose template:
+
+[ Empty ]
+
+[ 2D Platformer ]
+
+[ Top-down RPG ]
+
+[ Survival ]
+
+[ Racing ]
+
+[ Tower Defense ]
+
+[ FPS ]
+
+[ Multiplayer Arena ]
+
+[ Board Game ]
+```
+
+De gebruiker kiest bijvoorbeeld:
+
+**Survival**
+
+en jouw systeem maakt automatisch:
+
+```text
+Survival Game
+│
+├── Player
+│   ├── Health
+│   ├── Hunger
+│   ├── Stamina
+│   └── Inventory
+│
+├── World
+│   ├── Day/Night
+│   ├── Weather
+│   └── Terrain
+│
+├── Resources
+│   ├── Wood
+│   ├── Stone
+│   └── Food
+│
+├── Crafting
+│
+└── Enemies
+```
+
+Daarna hoeft de gebruiker alleen nog maar dingen te wijzigen.
+
+---
+
+# Multiplayer zou ik vanaf het begin ontwerpen
+
+Niet eerst:
+
+> singleplayer → later multiplayer
+
+Dat veroorzaakt enorme problemen.
+
+Maak het model vanaf het begin:
+
+```text
+                 GAME
+                  │
+         ┌────────┴────────┐
+         │                 │
+       CLIENT             SERVER
+         │                 │
+       Render             Logic
+       Input              Physics
+       UI                 AI
+                          Game State
+```
+
+De server is authoritative.
+
+Bijvoorbeeld:
+
+```text
+CLIENT
+"Ik klik attack"
+
+       ↓
+
+SERVER
+"Is deze speler werkelijk
+in range?"
+
+       ↓
+
+SERVER
+"Ja → enemy -20 HP"
+
+       ↓
+
+CLIENT
+"Enemy health changed"
+```
+
+Dat maakt later dedicated servers veel eenvoudiger.
+
+Godot ondersteunt hiervoor high-level multiplayer en dedicated-server deployments. ([Godot Engine documentation][1])
+
+---
+
+# Jouw game-format
+
+Een heel belangrijk onderdeel zou een eigen gameformaat zijn.
+
+Bijvoorbeeld:
+
+```text
+MySurvivalGame/
+│
+├── game.json
+├── world/
+├── entities/
+├── scripts/
+├── assets/
+│   ├── textures/
+│   ├── models/
+│   ├── sounds/
+│   └── animations/
+│
+└── server.json
+```
+
+`game.json` zou bijvoorbeeld kunnen bevatten:
+
+```json
+{
+  "name": "My Survival Game",
+  "version": "1.0",
+  "engine": "1.0",
+  "gameType": "survival",
+  "maxPlayers": 16,
+  "networkMode": "server-authoritative"
+}
+```
+
+Maar je visual logic kun je bijvoorbeeld serialiseren als:
+
+```json
+{
+  "event": "player_enter_area",
+  "conditions": [
+    {
+      "type": "time_of_day",
+      "operator": "equals",
+      "value": "night"
+    }
+  ],
+  "actions": [
+    {
+      "type": "spawn",
+      "entity": "zombie",
+      "amount": 3
+    }
+  ]
+}
+```
+
+Dat betekent dat een game **data** is.
+
+Niet:
+
+```text
+MyGame.exe
+```
+
+maar:
+
+```text
+MyGame/
+    game definition
+    assets
+    logic
+    configuration
+```
+
+Dat is een enorm voordeel voor een open platform.
+
+---
+
+# Daardoor krijg je uiteindelijk iets heel moois
+
+Je kunt een **Game Browser** bouwen.
+
+```text
+╔════════════════════════════════════════════╗
+║             COMMUNITY GAMES                ║
+╠════════════════════════════════════════════╣
+║                                            ║
+║  🏕 Survival Island             124 players║
+║                                            ║
+║  🏎 Neon Racing                 87 players ║
+║                                            ║
+║  ⚔ Dungeon Adventure            52 players ║
+║                                            ║
+║  🧱 Platform Chaos              31 players ║
+║                                            ║
+║  🧟 Zombie Survival             19 players ║
+║                                            ║
+╚════════════════════════════════════════════╝
+```
+
+Klik:
+
+**Play**
+
+en je client downloadt:
+
+```text
+Game metadata
++
+required assets
++
+game logic
+```
+
+en start het.
+
+---
+
+# En servers kunnen onafhankelijk zijn
+
+Dit vind ik persoonlijk één van de sterkste aspecten van jouw idee.
+
+Bijvoorbeeld:
+
+```text
+Game Browser
+     │
+     ├──── Server A
+     │       Belgium
+     │       24 players
+     │
+     ├──── Server B
+     │       Germany
+     │       12 players
+     │
+     └──── Server C
+             Private
+             4 players
+```
+
+Maar een gebruiker kan ook gewoon zeggen:
+
+```bash
+mygame-server \
+    --game MySurvivalGame \
+    --port 25565
+```
+
+En zijn eigen server draait.
+
+Dus:
+
+**geen verplichte centrale server.**
+
+Dat is een groot onderscheid met Roblox/Core.
+
+---
+
+# Je kunt zelfs een server registry maken
+
+Je centrale infrastructuur hoeft dan alleen maar een soort directory te zijn:
+
+```text
+                    MASTER SERVER
+                         │
+           ┌─────────────┼─────────────┐
+           │             │             │
+        Server A      Server B      Server C
+        Belgium       Germany       Home
+```
+
+De master server weet:
+
+```text
+Game
+Server IP
+Port
+Players
+Version
+Ping
+```
+
+Maar de gameplay gebeurt volledig tussen:
+
+```text
+Client ↔ Game Server
+```
+
+Niet:
+
+```text
+Client ↔ Your Company ↔ Game Server
+```
+
+Dat past veel beter bij een open-source filosofie.
+
+---
+
+# Wat ik NIET zou doen
+
+Ik zou absoluut niet beginnen met:
+
+> "Ik ga een nieuwe game engine schrijven."
+
+Dat is een gigantisch project.
+
+Ook niet:
+
+> "Ik maak eerst een volledig Roblox-alternatief."
+
+Te groot.
+
+Begin met:
+
+### Fase 1
+
+```text
+Godot
+  ↓
+Custom Editor
+  ↓
+Entities + Components
+  ↓
+2D
+```
+
+Maak bijvoorbeeld alleen:
+
+**2D platformer creator.**
+
+---
+
+### Fase 2
+
+Voeg visual logic toe.
+
+```text
+Events
+Conditions
+Actions
+```
+
+Nu kunnen mensen echt games maken.
+
+---
+
+### Fase 3
+
+Multiplayer.
+
+```text
+Client
+   ↕
+Server
+```
+
+---
+
+### Fase 4
+
+Game packaging.
+
+```text
+.game
+```
+
+of bijvoorbeeld:
+
+```text
+game.json
+assets/
+logic/
+```
+
+---
+
+### Fase 5
+
+Dedicated server.
+
+```bash
+platform-server mygame.game
+```
+
+---
+
+### Fase 6
+
+Community repository.
+
+```text
+Browse
+Download
+Install
+Play
+```
+
+---
+
+### Fase 7
+
+3D.
+
+Dan pas:
+
+```text
+2D
+ ↓
+3D
+ ↓
+physics
+ ↓
+vehicles
+ ↓
+AI
+ ↓
+etc.
+```
+
+---
+
+# Mijn keuze voor jouw specifieke situatie
+
+Omdat je al **C#/.NET** kent, zou ik ongeveer dit bouwen:
+
+```text
+                    ┌───────────────────┐
+                    │   Game Launcher   │
+                    │      C#/.NET      │
+                    └─────────┬─────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │   Game Browser    │
+                    │      C#/.NET      │
+                    └─────────┬─────────┘
+                              │
+             ┌────────────────▼────────────────┐
+             │          YOUR PLATFORM          │
+             │                                 │
+             │  Editor                         │
+             │  ├── Scene editor               │
+             │  ├── Entity editor              │
+             │  ├── Component editor            │
+             │  ├── Visual logic editor        │
+             │  └── Asset browser              │
+             │                                 │
+             │  Runtime                        │
+             │  ├── Physics                    │
+             │  ├── Rendering                  │
+             │  ├── Audio                      │
+             │  ├── Networking                 │
+             │  └── Game systems               │
+             └────────────────┬────────────────┘
+                              │
+                         GODOT ENGINE
+                              │
+                ┌─────────────┴─────────────┐
+                │                           │
+             CLIENT                      SERVER
+                │                           │
+             Windows                     Linux
+             Linux                       Docker
+             macOS                       VPS
+```
+
+---
+
+# Maar er is één alternatief dat je moet overwegen
+
+Je zou ook kunnen kijken naar **Luanti** als basis in plaats van Godot.
+
+Dat heeft als voordeel dat het concept van:
+
+> engine → games → mods → servers → automatisch content downloaden
+
+al bestaat. Luanti is bovendien daadwerkelijk open source en ondersteunt lokaal én multiplayer spelen. ([luanti.org][6])
+
+Maar je zit dan sterk vast aan het voxelconcept.
+
+**Godot geeft je veel meer vrijheid.**
+
+---
+
+# Mijn ranking voor jouw idee
+
+| Technologie           | Geschikt? | Waarom                                                               |
+| --------------------- | --------: | -------------------------------------------------------------------- |
+| **Godot**             |     ⭐⭐⭐⭐⭐ | Beste basis voor jouw eigen platform                                 |
+| **Luanti**            |      ⭐⭐⭐⭐ | Zeer interessant als voxel games centraal staan                      |
+| **Unity**             |       ⭐⭐⭐ | Technisch sterk, maar minder geschikt voor volledig open-source doel |
+| **Unreal**            |        ⭐⭐ | Veel te zwaar voor jouw doel                                         |
+| **Roblox**            |        ⭐⭐ | Conceptueel perfect voorbeeld, maar gesloten                         |
+| **Core**              |        ⭐⭐ | Heel dichtbij jouw concept, maar gesloten                            |
+| Zelf engine schrijven |         ⭐ | Veel te veel werk                                                    |
+
+Roblox en Core zijn eigenlijk vooral nuttig om **te bestuderen wat je wilt bouwen**, niet als technische basis. Roblox combineert editor, engine, templates, multiplayer en publishing in één platform. ([Creator Hub][8]) Core doet iets vergelijkbaars met templates, assets en multiplayer publishing. ([Core Games][3])
+
+---
+
+## En ik denk dat je idee nóg interessanter kan worden
+
+Ik zou het niet positioneren als:
+
+> **"een game engine voor beginners."**
+
+Maar als:
+
+> **"een open-source platform waarop iedereen zijn eigen games kan maken, publiceren en hosten."**
+
+Dat verschil is belangrijk.
+
+Want dan wordt jouw eigen software uiteindelijk maar de **infrastructuur**.
+
+Iemand anders kan vervolgens een:
+
+* Minecraft-achtige survival game
+* Pokémon-achtige RPG
+* 2D platformer
+* FPS
+* racing game
+* horror game
+* RTS
+* roguelike
+* multiplayer party game
+
+maken **zonder dat jij die games zelf hoeft te programmeren**.
+
+En doordat de games uit data/components bestaan, kan iemand anders zelfs nieuwe componenten/plugins voor het platform schrijven.
+
+Dat begint dan eigenlijk op een **open-source Roblox + game engine + Steam Workshop + dedicated-server ecosystem** te lijken.
+
+**Als je dit serieus als project wilt aanpakken, zou ik als volgende stap niet meteen code schrijven.** Ik zou eerst de **architectuur van het platform ontwerpen**: welke projecten, entities, components, visual-scripting nodes, game files, client/server-communicatie en plugin/API's je nodig hebt. Dat kan ik vervolgens concreet voor je uitwerken tot een **technische architectuur + mappenstructuur + database/model + MVP-roadmap**, specifiek gericht op C#/.NET + Godot.
+
+[1]: https://docs.godotengine.org/en/4.7/tutorials/networking/high_level_multiplayer.html?utm_source=chatgpt.com "High-level multiplayer — Godot Engine (4.7) documentation in English"
+[2]: https://create.roblox.com/docs/studio?utm_source=chatgpt.com "Roblox Studio | Documentation - Roblox Creator Hub"
+[3]: https://www.coregames.com/create?utm_source=chatgpt.com "Create in Core - Core Games"
+[4]: https://support.coregames.com/portal/en/kb/articles/core-games-and-content?utm_source=chatgpt.com "Core Games and Content"
+[5]: https://docs.coregames.com/references/networking/?utm_source=chatgpt.com "Networking in Core - Core Documentation"
+[6]: https://www.luanti.org/en/?utm_source=chatgpt.com "Luanti | Open source voxel game engine - Luanti"
+[7]: https://wiki.minetest.org/Getting_Started?utm_source=chatgpt.com "Getting Started - Minetest"
+[8]: https://create.roblox.com/docs/platform?utm_source=chatgpt.com "The social 3D creation platform | Documentation - Roblox Creator Hub"
